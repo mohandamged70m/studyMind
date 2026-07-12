@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, Public_Sans, Newsreader } from "next/font/google";
 import { cookies } from "next/headers";
+import { ClerkProvider } from "@clerk/nextjs";
 import TopNav from "@/components/TopNav";
 import "./globals.css";
 
@@ -40,10 +41,12 @@ export default async function RootLayout({
       <body
         className={`${fraunces.variable} ${publicSans.variable} ${newsreader.variable} font-sans antialiased bg-paper text-ink min-h-screen flex flex-col`}
       >
-        <TopNav activeDocId={activeDocId} />
-        <main className="flex-1 flex flex-col min-h-0">
-          {children}
-        </main>
+        <ClerkProvider>
+          <TopNav activeDocId={activeDocId} />
+          <main className="flex-1 flex flex-col min-h-0">
+            {children}
+          </main>
+        </ClerkProvider>
       </body>
     </html>
   );

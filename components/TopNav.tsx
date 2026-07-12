@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, GraduationCap, Library as LibraryIcon, User } from "lucide-react";
+import { BookOpen, GraduationCap, Library as LibraryIcon } from "lucide-react";
 import clsx from "clsx";
+import { SignInButton, SignUpButton, Show, UserButton } from "@clerk/nextjs";
 
 export default function TopNav({ activeDocId }: { activeDocId?: string }) {
   const pathname = usePathname();
@@ -95,19 +96,35 @@ export default function TopNav({ activeDocId }: { activeDocId?: string }) {
         })}
       </div>
 
-      {/* User Avatar */}
+      {/* User Avatar / Clerk Auth */}
       <div className="flex items-center gap-3">
         <div className="hidden md:flex flex-col text-right" aria-hidden="true">
           <span className="text-xs font-semibold text-ink">Scholar Mode</span>
           <span className="text-[10px] text-sage font-medium">Librarian level 4</span>
         </div>
-        <button
-          type="button"
-          aria-label="Open profile"
-          className="h-9 w-9 rounded-full bg-sage text-paper flex items-center justify-center font-bold font-serif hover:bg-sage-deep transition-colors duration-200 border border-line shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracotta focus-visible:ring-offset-2 focus-visible:ring-offset-card"
-        >
-          <User className="h-4 w-4 text-paper" aria-hidden="true" />
-        </button>
+        <Show when="signed-in">
+          <UserButton />
+        </Show>
+        <Show when="signed-out">
+          <div className="flex gap-2">
+            <SignInButton mode="modal">
+              <button
+                type="button"
+                className="text-xs font-semibold px-3 py-1.5 border border-sage rounded-full text-sage hover:bg-sage hover:text-paper transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracotta focus-visible:ring-offset-2"
+              >
+                Sign In
+              </button>
+            </SignInButton>
+            <SignUpButton mode="modal">
+              <button
+                type="button"
+                className="text-xs font-semibold px-3 py-1.5 bg-sage text-paper rounded-full hover:bg-sage-deep transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracotta focus-visible:ring-offset-2"
+              >
+                Sign Up
+              </button>
+            </SignUpButton>
+          </div>
+        </Show>
       </div>
     </nav>
   );
