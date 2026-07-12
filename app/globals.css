@@ -1,0 +1,137 @@
+@import "tailwindcss";
+
+:root {
+  --paper: #f6f1e7;
+  --paper-deep: #efe8d8;
+  --card: #fffdf8;
+  --ink: #2b2420;
+  --ink-soft: #6b6155;
+  --line: #e2d8c3;
+  --sage: #7c8f6f;
+  --sage-deep: #5f7154;
+  --terracotta: #c1633c;
+  --terracotta-soft: #f0dccb;
+  --gold: #b8923f;
+  --ring-focus: rgba(193, 99, 60, 0.4);
+}
+
+@theme {
+  --color-paper: var(--paper);
+  --color-paper-deep: var(--paper-deep);
+  --color-card: var(--card);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-line: var(--line);
+  --color-sage: var(--sage);
+  --color-sage-deep: var(--sage-deep);
+  --color-terracotta: var(--terracotta);
+  --color-terracotta-soft: var(--terracotta-soft);
+  --color-gold: var(--gold);
+
+  --font-serif: var(--font-fraunces), serif;
+  --font-sans: var(--font-public-sans), sans-serif;
+  --font-reading: var(--font-newsreader), serif;
+
+  --text-display: 30px;
+  --text-heading: 24px;
+  --text-subhead: 19px;
+  --text-body: 15px;
+  --text-label: 14px;
+  --text-caption: 13px;
+  --text-micro: 11.5px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+}
+
+body {
+  background-color: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-public-sans), sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--paper-deep);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--sage);
+}
+
+/* 3D Card Flips */
+.perspective-1000 {
+  perspective: 1000px;
+}
+.transform-style-3d {
+  transform-style: preserve-3d;
+}
+.backface-hidden {
+  backface-visibility: hidden;
+}
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
+
+::selection {
+  background-color: var(--terracotta-soft);
+  color: var(--ink);
+}
+
+/* Page transition animation */
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-page-enter {
+  animation: page-enter 400ms ease both;
+}
+
+/* Citation highlight flash */
+@keyframes citation-flash {
+  0% { box-shadow: 0 0 0 0 rgba(193, 99, 60, 0.5); }
+  50% { box-shadow: 0 0 0 6px rgba(193, 99, 60, 0.2); }
+  100% { box-shadow: 0 0 0 0 rgba(193, 99, 60, 0); }
+}
+.animate-citation-flash {
+  animation: citation-flash 600ms ease;
+}
+
+/* Subtle fade-in for card elements */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Grid helper */
+.grid-12 {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: var(--space-5);
+}

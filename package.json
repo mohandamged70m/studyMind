@@ -1,0 +1,37 @@
+{
+  "name": "study-partner-agent",
+  "version": "1.0.0",
+  "description": "StudyMind - An intelligent study companion powered by Next.js 16, React 19, and Tailwind v4",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint . --ext .ts,.tsx"
+  },
+  "dependencies": {
+    "@clerk/nextjs": "^7.5.13",
+    "@langchain/openai": "^1.5.3",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.471.0",
+    "mammoth": "^1.12.0",
+    "next": "16.2.10",
+    "pdf-parse": "^2.4.5",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "tailwind-merge": "^2.6.0",
+    "tailwindcss": "4.0.0-beta.8",
+    "uuid": "^14.0.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.0.0-beta.8",
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.0.2",
+    "@types/react-dom": "^19.0.2",
+    "autoprefixer": "^10.4.20",
+    "babel-plugin-react-compiler": "^19.0.0-beta-20250106-9ab2e33",
+    "eslint": "^9.17.0",
+    "eslint-config-next": "16.2.10",
+    "postcss": "^8.4.49",
+    "typescript": "^5.7.2"
+  }
+}

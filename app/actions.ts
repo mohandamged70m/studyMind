@@ -1,0 +1,92 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
+import {
+  uploadDocument,
+  updateDocumentProgress,
+  addHighlight,
+  deleteHighlight,
+  deleteDocument
+} from "@/lib/data";
+import { embedDocument } from "@/lib/rag";
+
+export async function uploadDocumentAction(title: string, pageCount: number, type: "pdf" | "audio" | "video" = "pdf") {
+  // 1. Create document entry with new status (indexing...)
+  const doc = await uploadDocument(title, pageCount, type);
+  
+  // 2. Perform mock RAG embedding indexing
+  const pages = Array.from({ length: pageCount }, (_, i) => `Page ${i + 1}`);
+  await embedDocument(doc.id, title, pages);
+  
+  // 3. Mark last opened doc in cookies
+  const cookieStore = await cookies();
+  cookieStore.set("last_opened_doc", doc.id, { path: "/" });
+
+  // 4. Revalidate and refresh grid
+  revalidatePath("/library");
+  return doc;
+}
+
+export async function selectDocumentAction(docId: string) {
+  const cookieStore = await cookies();
+  cookieStore.set("last_opened_doc", docId, { path: "/" });
+  revalidatePath("/library");
+  revalidatePath(`/study/${docId}`);
+  revalidatePath(`/review/${docId}`);
+}
+
+export async function saveHighlightAction(docId: string, page: number, text: string, note?: string) {
+  const highlight = await addHighlight(docId, page, text, note);
+  
+  // Update document progress if it was new
+  await updateDocumentProgress(docId, 10, "in_progress");
+  
+  revalidatePath(`/study/${docId}`);
+  return highlight;
+}
+
+export async function deleteHighlightAction(id: string, docId: string) {
+  await deleteHighlight(id);
+  revalidatePath(`/study/${docId}`);
+}
+
+export async function updateProgressAction(
+  docId: string,
+  progress: number,
+  status: "new" | "in_progress" | "mastered"
+) {
+  const doc = await updateDocumentProgress(docId, progress, status);
+  revalidatePath("/library");
+  revalidatePath(`/study/${docId}`);
+  revalidatePath(`/review/${docId}`);
+  return doc;
+}
+
+export async function deleteDocumentAction(docId: string) {
+  await deleteDocument(docId);
+  const cookieStore = await cookies();
+  if (cookieStore.get("last_opened_doc")?.value === docId) {
+    cookieStore.delete("last_opened_doc");
+  }
+  revalidatePath("/library");
+}
+
+export async function addChatMessageAction(
+  docId: string,
+  role: "user" | "assistant",
+  content: string,
+  citedPage?: number
+) {
+  const { addChatMessage } = await import("@/lib/data");
+  const msg = await addChatMessage(docId, role, content, citedPage);
+  revalidatePath(`/study/${docId}`);
+  return msg;
+}
+
+export async function clearChatHistoryAction(docId: string) {
+  const { clearChatHistory } = await import("@/lib/data");
+  await clearChatHistory(docId);
+  revalidatePath(`/study/${docId}`);
+}
+
