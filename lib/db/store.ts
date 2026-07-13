@@ -28,7 +28,12 @@ const defaultStore: DataStore = {
 let cache: DataStore | null = null;
 
 async function ensureDataDir() {
-  await fs.mkdir(DATA_DIR, { recursive: true });
+  // Best-effort: serverless/readonly filesystems (e.g. Vercel) may reject this.
+  try {
+    await fs.mkdir(DATA_DIR, { recursive: true });
+  } catch {
+    /* ignore — falls back to in-memory cache */
+  }
 }
 
 async function loadStore(): Promise<DataStore> {
@@ -41,6 +46,7 @@ async function loadStore(): Promise<DataStore> {
     cache = { ...defaultStore, ...(JSON.parse(raw) as Partial<DataStore>) };
   } catch {
     cache = { ...defaultStore };
+    // saveStore is non-fatal on read-only filesystems.
     await saveStore();
   }
   return cache!;
@@ -48,8 +54,16 @@ async function loadStore(): Promise<DataStore> {
 
 export async function saveStore() {
   if (!cache) return;
-  await ensureDataDir();
-  await fs.writeFile(STORE_FILE, JSON.stringify(cache, null, 2), "utf-8");
+  try {
+    await ensureDataDir();
+    await fs.writeFile(STORE_FILE, JSON.stringify(cache, null, 2), "utf-8");
+  } catch (err) {
+    // Read-only or ephemeral filesystem (serverless deploys): keep the
+    // in-memory cache so the app still works, just without persistence.
+    if (process.env.NODE_ENV !== "production") {
+      console.warn("[store] unable to persist store.json:", (err as Error).message);
+    }
+  }
 }
 
 export async function getStore(): Promise<DataStore> {
