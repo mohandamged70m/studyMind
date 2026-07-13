@@ -36,7 +36,9 @@ async function loadStore(): Promise<DataStore> {
   await ensureDataDir();
   try {
     const raw = await fs.readFile(STORE_FILE, "utf-8");
-    cache = JSON.parse(raw) as DataStore;
+    // Merge with defaults so older/partial store files (missing fields
+    // like libraryDocs or collections) don't break consumers.
+    cache = { ...defaultStore, ...(JSON.parse(raw) as Partial<DataStore>) };
   } catch {
     cache = { ...defaultStore };
     await saveStore();
