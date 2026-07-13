@@ -7,7 +7,14 @@ import {
   updateDocumentProgress,
   addHighlight,
   deleteHighlight,
-  deleteDocument
+  deleteDocument,
+  renameDocument,
+  getCollections,
+  createCollection,
+  renameCollection,
+  deleteCollection,
+  assignToCollection,
+  bulkDeleteDocuments
 } from "@/lib/data";
 import { embedDocument } from "@/lib/rag";
 
@@ -88,5 +95,55 @@ export async function clearChatHistoryAction(docId: string) {
   const { clearChatHistory } = await import("@/lib/data");
   await clearChatHistory(docId);
   revalidatePath(`/study/${docId}`);
+}
+
+// ─── Document rename ───────────────────────────────────────────────────
+
+export async function renameDocumentAction(docId: string, title: string) {
+  const clean = title.trim();
+  if (!clean) return null;
+  const doc = await renameDocument(docId, clean);
+  revalidatePath("/library");
+  revalidatePath(`/study/${docId}`);
+  revalidatePath(`/review/${docId}`);
+  return doc;
+}
+
+// ─── Collections ───────────────────────────────────────────────────────
+
+export async function createCollectionAction(name: string) {
+  const clean = name.trim();
+  if (!clean) return null;
+  const collection = await createCollection(clean);
+  revalidatePath("/library");
+  return collection;
+}
+
+export async function renameCollectionAction(id: string, name: string) {
+  const clean = name.trim();
+  if (!clean) return null;
+  const collection = await renameCollection(id, clean);
+  revalidatePath("/library");
+  return collection;
+}
+
+export async function deleteCollectionAction(id: string) {
+  await deleteCollection(id);
+  revalidatePath("/library");
+}
+
+export async function assignToCollectionAction(
+  docId: string,
+  collectionId: string | null
+) {
+  await assignToCollection(docId, collectionId);
+  revalidatePath("/library");
+}
+
+export async function bulkDeleteDocumentsAction(ids: string[]) {
+  if (!ids.length) return 0;
+  const count = await bulkDeleteDocuments(ids);
+  revalidatePath("/library");
+  return count;
 }
 

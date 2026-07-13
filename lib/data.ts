@@ -1,11 +1,11 @@
-import { Document, ChatMessage, Highlight, Flashcard, QuizQuestion } from "./types";
+import { Document, ChatMessage, Highlight, Flashcard, QuizQuestion, Collection } from "./types";
 import {
   seedDemoLibraryIfNeeded,
   getDocuments as storeGetDocuments,
   getDocumentById as storeGetDocumentById,
   addLibraryDocument,
   updateDocumentProgress as storeUpdateDocumentProgress,
-  deleteLibraryDocument,
+  deleteLibraryDocument as storeDeleteLibraryDocument,
   getDocumentPages as storeGetDocumentPages,
   setDocumentPages,
   getHighlights as storeGetHighlights,
@@ -16,6 +16,12 @@ import {
   clearChatHistory as storeClearChatHistory,
   getFlashcards as storeGetFlashcards,
   getQuizQuestions as storeGetQuizQuestions,
+  getCollections as storeGetCollections,
+  createCollection as storeCreateCollection,
+  renameCollection as storeRenameCollection,
+  deleteCollection as storeDeleteCollection,
+  updateDocumentCollection as storeUpdateDocumentCollection,
+  renameLibraryDocument as storeRenameLibraryDocument,
 } from "./db/store";
 
 // Seed demo data on first import (once per server lifetime)
@@ -84,6 +90,47 @@ export async function uploadDocument(
     userId,
   };
 
+  // Generate 3 Quiz questions
+  const q1: QuizQuestion & { userId?: string } = {
+    id: `q-${newDoc.id}-1`,
+    docId: newDoc.id,
+    question: `Which best describes '${title}'?`,
+    options: [
+      "A study companion document for RAG Q&A",
+      "A video streaming source",
+      "An audio playlist",
+      "A spreadsheet",
+    ],
+    correctIndex: 0,
+    userId,
+  };
+  const q2: QuizQuestion & { userId?: string } = {
+    id: `q-${newDoc.id}-2`,
+    docId: newDoc.id,
+    question: `What can you do with '${title}' on StudyMind?`,
+    options: [
+      "Only delete it",
+      "Generate flashcards and run citation-backed chats",
+      "Share it publicly",
+      "Convert it to audio",
+    ],
+    correctIndex: 1,
+    userId,
+  };
+  const q3: QuizQuestion & { userId?: string } = {
+    id: `q-${newDoc.id}-3`,
+    docId: newDoc.id,
+    question: `How does StudyMind handle citations?`,
+    options: [
+      "It ignores them",
+      "It deep-links citations to the exact page in the viewer",
+      "It emails them to you",
+      "It stores them in a separate app",
+    ],
+    correctIndex: 1,
+    userId,
+  };
+
   // Access store to push flashcards & quizzes and save
   const { getStore, saveStore } = await import("./db/store");
   const store = await getStore();
@@ -109,7 +156,7 @@ export async function deleteDocument(
   userId?: string
 ): Promise<boolean> {
   await ensureSeeded();
-  return deleteLibraryDocument(id, userId);
+  return storeDeleteLibraryDocument(id, userId);
 }
 
 export async function getDocumentPages(id: string): Promise<string[]> {
@@ -185,4 +232,62 @@ export async function getQuizQuestions(
 ): Promise<QuizQuestion[]> {
   await ensureSeeded();
   return storeGetQuizQuestions(docId, userId);
+}
+
+export async function renameDocument(
+  id: string,
+  title: string,
+  userId?: string
+): Promise<Document | undefined> {
+  await ensureSeeded();
+  return storeRenameLibraryDocument(id, title);
+}
+
+export async function getCollections(userId?: string): Promise<Collection[]> {
+  await ensureSeeded();
+  return storeGetCollections(userId);
+}
+
+export async function createCollection(
+  name: string,
+  userId?: string
+): Promise<Collection> {
+  await ensureSeeded();
+  return storeCreateCollection(name, userId);
+}
+
+export async function renameCollection(
+  id: string,
+  name: string
+): Promise<Collection | undefined> {
+  await ensureSeeded();
+  return storeRenameCollection(id, name);
+}
+
+export async function deleteCollection(
+  id: string
+): Promise<boolean> {
+  await ensureSeeded();
+  return storeDeleteCollection(id);
+}
+
+export async function assignToCollection(
+  docId: string,
+  collectionId: string | null
+): Promise<Document | undefined> {
+  await ensureSeeded();
+  return storeUpdateDocumentCollection(docId, collectionId);
+}
+
+export async function bulkDeleteDocuments(
+  ids: string[],
+  userId?: string
+): Promise<number> {
+  await ensureSeeded();
+  let count = 0;
+  for (const id of ids) {
+    const ok = await storeDeleteLibraryDocument(id, userId);
+    if (ok) count++;
+  }
+  return count;
 }

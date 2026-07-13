@@ -6,6 +6,13 @@ export type Document = {
   progress: number; // 0-100
   lastOpenedAt: string | null;
   type?: "pdf" | "audio" | "video"; // Keep Stage 2 in mind
+  collectionId?: string | null;
+};
+
+export type Collection = {
+  id: string;
+  name: string;
+  createdAt: string;
 };
 
 export type ChatMessage = {

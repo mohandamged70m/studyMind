@@ -4,6 +4,7 @@ import type {
   Highlight,
   Flashcard,
   QuizQuestion,
+  Collection,
 } from "../types";
 
 export interface DocumentChunk {
@@ -75,4 +76,6 @@ export interface DataStore {
   flashcards: Flashcard[];
   /** Generated quiz questions */
   quizQuestions: QuizQuestion[];
+  /** User-defined collections/folders for organizing library documents */
+  collections: Collection[];
 }

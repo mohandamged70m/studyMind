@@ -22,6 +22,7 @@ const defaultStore: DataStore = {
   highlights: [],
   flashcards: [],
   quizQuestions: [],
+  collections: [],
 };
 
 let cache: DataStore | null = null;
@@ -263,6 +264,86 @@ export async function setDocumentPages(
   const store = await loadStore();
   store.pages[id] = pages;
   await saveStore();
+}
+
+// ─── Collections ───────────────────────────────────────────────────────
+
+export async function getCollections(
+  userId?: string
+): Promise<import("../types").Collection[]> {
+  const store = await loadStore();
+  return store.collections.sort(
+    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+  );
+}
+
+export async function createCollection(
+  name: string,
+  userId?: string
+): Promise<import("../types").Collection> {
+  const store = await loadStore();
+  const collection: import("../types").Collection & { userId?: string } = {
+    id: `col-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`,
+    name: name.trim(),
+    createdAt: new Date().toISOString(),
+    userId,
+  };
+  store.collections.push(collection);
+  await saveStore();
+  return collection;
+}
+
+export async function renameCollection(
+  id: string,
+  name: string
+): Promise<import("../types").Collection | undefined> {
+  const store = await loadStore();
+  const collection = store.collections.find((c: any) => c.id === id);
+  if (collection) {
+    collection.name = name.trim();
+    await saveStore();
+  }
+  return collection;
+}
+
+export async function deleteCollection(
+  id: string
+): Promise<boolean> {
+  const store = await loadStore();
+  const initialLen = store.collections.length;
+  store.collections = store.collections.filter((c: any) => c.id !== id);
+  // Unassign documents from the deleted collection
+  store.libraryDocs.forEach((d: any) => {
+    if (d.collectionId === id) d.collectionId = null;
+  });
+  await saveStore();
+  return store.collections.length < initialLen;
+}
+
+export async function updateDocumentCollection(
+  docId: string,
+  collectionId: string | null
+): Promise<import("../types").Document | undefined> {
+  const store = await loadStore();
+  const doc = store.libraryDocs.find((d: any) => d.id === docId);
+  if (doc) {
+    doc.collectionId = collectionId;
+    await saveStore();
+  }
+  return doc;
+}
+
+export async function renameLibraryDocument(
+  id: string,
+  title: string
+): Promise<import("../types").Document | undefined> {
+  const store = await loadStore();
+  const doc = store.libraryDocs.find((d: any) => d.id === id);
+  if (doc) {
+    doc.title = title.trim();
+    await saveStore();
+  }
+  return doc;
 }
 
 // ─── Highlights ────────────────────────────────────────────────────────
