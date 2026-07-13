@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   FileText,
   Headphones,
@@ -334,19 +335,21 @@ function SelectBox({ checked, onChange, disabled }: { checked?: boolean; onChang
 }
 
 function QuickLink({ href, label, icon, onClick }: { href: string; label: string; icon: React.ReactNode; onClick?: () => void }) {
+  const router = useRouter();
   return (
-    <Link
-      href={href}
+    <button
+      type="button"
       onClick={(e) => {
         e.stopPropagation();
         onClick?.();
+        if (!href.startsWith("#")) router.push(href);
       }}
       title={label}
       className="flex items-center gap-1 px-2 py-1 rounded-lg bg-paper-deep border border-line text-[var(--text-micro)] font-semibold text-ink-soft hover:text-terracotta hover:border-terracotta/40 transition-colors"
     >
       {icon}
       <span className="hidden sm:inline">{label}</span>
-    </Link>
+    </button>
   );
 }
 
