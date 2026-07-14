@@ -114,9 +114,9 @@ export default function DocumentCard({
 
   const quickActions = (
     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
-      <QuickLink href={`/study/${doc.id}`} onClick={() => selectDocumentAction(doc.id)} label="Study" icon={<MessageSquare className="h-3.5 w-3.5" />} />
+      <QuickLink href={`/notebook/${doc.id}`} onClick={() => selectDocumentAction(doc.id)} label="Notebook" icon={<MessageSquare className="h-3.5 w-3.5" />} />
       <QuickLink href={`/review/${doc.id}`} label="Review" icon={<BookOpen className="h-3.5 w-3.5" />} />
-      <QuickLink href={`/study/${doc.id}#highlights`} label="Highlights" icon={<Highlighter className="h-3.5 w-3.5" />} />
+      <QuickLink href={`/study/room/demo-room`} label="Room" icon={<BookOpen className="h-3.5 w-3.5" />} />
     </div>
   );
 
@@ -135,7 +135,7 @@ export default function DocumentCard({
         )}
 
         <Link
-          href={isOptimistic ? "#" : `/study/${doc.id}`}
+          href={isOptimistic ? "#" : `/notebook/${doc.id}`}
           onClick={handleCardClick}
           className={clsx(
             "shrink-0 p-2.5 rounded-xl border border-line/50 bg-gradient-to-br",

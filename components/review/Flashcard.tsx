@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { Flashcard as FlashcardType } from "@/lib/types";
 import { ArrowLeft, ArrowRight, RotateCw, CheckCircle2, Circle } from "lucide-react";
 import clsx from "clsx";
