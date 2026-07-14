@@ -44,13 +44,13 @@ export default function TopNav({ activeDocId }: { activeDocId?: string }) {
   ];
 
   return (
-    <nav className="w-full bg-card border-b border-line px-6 py-3 flex items-center justify-between sticky top-0 z-50 shadow-sm">
+    <nav className="w-full bg-card border-b border-line px-4 py-3 flex items-center justify-between sticky top-0 z-50 shadow-sm md:px-6">
       {/* Logo */}
       <Link href="/library" className="flex items-center gap-2 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracotta focus-visible:ring-offset-2 focus-visible:ring-offset-card rounded-lg">
         <div className="bg-terracotta text-paper p-2 rounded-lg group-hover:bg-terracotta-soft group-hover:text-terracotta transition-colors duration-200" aria-hidden="true">
           <GraduationCap className="h-5 w-5" />
         </div>
-        <span className="font-serif font-bold text-xl tracking-tight text-ink">
+        <span className="font-serif font-bold text-lg tracking-tight text-ink sm:text-xl">
           Study<span className="text-terracotta">Mind</span>
         </span>
       </Link>
@@ -67,10 +67,10 @@ export default function TopNav({ activeDocId }: { activeDocId?: string }) {
                 aria-disabled="true"
                 tabIndex={0}
                 onClick={(e) => e.preventDefault()}
-                className="group relative flex items-center gap-1.5 md:gap-2 px-3 py-2 text-sm font-medium text-ink-soft opacity-40 cursor-not-allowed select-none rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracotta focus-visible:ring-offset-2 focus-visible:ring-offset-card"
+                className="group relative flex items-center gap-1.5 px-2.5 py-2 text-sm font-medium text-ink-soft opacity-40 cursor-not-allowed select-none rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracotta focus-visible:ring-offset-2 focus-visible:ring-offset-card md:gap-2 md:px-3"
               >
                 <Icon className="h-4 w-4" aria-hidden="true" />
-                <span>{tab.name}</span>
+                <span className="hidden sm:inline">{tab.name}</span>
                 {/* Micro tooltip — visible on hover and keyboard focus */}
                 <span
                   role="tooltip"
@@ -89,14 +89,14 @@ export default function TopNav({ activeDocId }: { activeDocId?: string }) {
               href={tab.href}
               aria-current={isActive ? "page" : undefined}
               className={clsx(
-                "flex items-center gap-1.5 md:gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracotta focus-visible:ring-offset-2 focus-visible:ring-offset-card",
+                "flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracotta focus-visible:ring-offset-2 focus-visible:ring-offset-card md:gap-2 md:px-4",
                 isActive
                   ? "bg-paper-deep text-terracotta shadow-inner font-semibold border-b-2 border-terracotta"
                   : "text-ink-soft hover:text-ink hover:bg-paper/50"
               )}
             >
               <Icon className={clsx("h-4 w-4", isActive ? "text-terracotta" : "text-ink-soft")} aria-hidden="true" />
-              <span>{tab.name}</span>
+              <span className="hidden sm:inline">{tab.name}</span>
             </Link>
           );
         })}
@@ -112,24 +112,24 @@ export default function TopNav({ activeDocId }: { activeDocId?: string }) {
           <UserButton />
         </Show>
         <Show when="signed-out">
-          <div className="flex gap-2">
-            <SignInButton mode="modal">
-              <button
-                type="button"
-                className="text-xs font-semibold px-3 py-1.5 border border-sage rounded-full text-sage hover:bg-sage hover:text-paper transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracotta focus-visible:ring-offset-2"
-              >
-                Sign In
-              </button>
-            </SignInButton>
-            <SignUpButton mode="modal">
-              <button
-                type="button"
-                className="text-xs font-semibold px-3 py-1.5 bg-sage text-paper rounded-full hover:bg-sage-deep transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracotta focus-visible:ring-offset-2"
-              >
-                Sign Up
-              </button>
-            </SignUpButton>
-          </div>
+            <div className="flex gap-1.5 sm:gap-2">
+              <SignInButton mode="modal">
+                <button
+                  type="button"
+                  className="text-[11px] font-semibold px-2.5 py-1.5 border border-sage rounded-full text-sage hover:bg-sage hover:text-paper transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracotta focus-visible:ring-offset-2 sm:text-xs sm:px-3"
+                >
+                  Sign In
+                </button>
+              </SignInButton>
+              <SignUpButton mode="modal">
+                <button
+                  type="button"
+                  className="text-[11px] font-semibold px-2.5 py-1.5 bg-sage text-paper rounded-full hover:bg-sage-deep transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracotta focus-visible:ring-offset-2 sm:text-xs sm:px-3"
+                >
+                  Sign Up
+                </button>
+              </SignUpButton>
+            </div>
         </Show>
       </div>
     </nav>

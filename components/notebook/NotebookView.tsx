@@ -53,7 +53,7 @@ export default function NotebookView({
   return (
     <div className="flex h-full min-h-0 flex-col">
       {/* Notebook header */}
-      <header className="flex shrink-0 items-center justify-between gap-4 border-b border-line bg-paper px-6 py-3">
+      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-line bg-paper px-4 py-3 sm:gap-4 sm:px-6">
         <div className="flex min-w-0 items-center gap-3">
           <Link
             href="/library"
@@ -114,12 +114,9 @@ export default function NotebookView({
 
       {/* Body: reader + tabbed panel */}
       <ActivePageProvider>
-        <div
-          className="grid min-h-0 flex-1"
-          style={{ gridTemplateColumns: "1.3fr 1fr", gap: "0" }}
-        >
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:grid lg:grid-cols-[1.3fr_1fr]">
           {/* Left: PDF reader */}
-          <div className="min-h-0 overflow-hidden border-r border-line">
+          <div className="h-[55vh] min-h-0 shrink-0 overflow-hidden border-b border-line lg:h-auto lg:border-b-0 lg:border-r">
             <PdfViewer
               docId={docId}
               title={title}
@@ -129,7 +126,7 @@ export default function NotebookView({
           </div>
 
           {/* Right: tabbed panel */}
-          <div className="flex min-h-0 flex-col bg-paper-deep">
+          <div className="flex min-h-0 flex-1 flex-col bg-paper-deep lg:flex-none">
             <div className="flex shrink-0 border-b border-line bg-card">
               {tabs.map((t) => {
                 const Icon = t.icon;

@@ -9,7 +9,7 @@ import RoomNotesPanel from "./RoomNotesPanel";
 import RoomToolsPanel from "./RoomToolsPanel";
 import StudyRoomTopBar from "./StudyRoomTopBar";
 import { ThreeColumnLayout } from "@/components/layout/three-column-layout";
-import { MessageSquare, Highlighter, Wrench } from "lucide-react";
+import { MessageSquare, Highlighter, Wrench, Files } from "lucide-react";
 import clsx from "clsx";
 import type { ChatMessage, Highlight } from "@/lib/types";
 import {
@@ -50,6 +50,12 @@ export default function StudyRoomClient({
     initialDocuments[0]?.id ?? null
   );
   const [rightTab, setRightTab] = useState<RightTab>("chat");
+  const [mobilePanel, setMobilePanel] = useState<"docs" | "chat" | "notes" | "tools" | null>(null);
+
+  const openMobilePanel = (panel: "docs" | "chat" | "notes" | "tools") => {
+    if (panel !== "docs") setRightTab(panel);
+    setMobilePanel(panel);
+  };
   const pendingCite = useRef<{ docId: string; page: number } | null>(null);
 
   const activeDoc = documents.find((d) => d.id === activeDocId) ?? null;
@@ -210,7 +216,7 @@ export default function StudyRoomClient({
   );
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-paper">
+    <div className="flex h-screen flex-col overflow-hidden bg-paper pb-14 lg:pb-0">
       <StudyRoomTopBar
         roomId={roomId}
         title={title}
@@ -221,6 +227,54 @@ export default function StudyRoomClient({
         collaborators={[{ name: "You", color: "#C2410C" }]}
       />
       <ThreeColumnLayout left={left} center={center} right={right} />
+
+      {/* Mobile bottom tab bar — toggles access to the hidden panels */}
+      <nav className="lg:hidden fixed inset-x-0 bottom-0 z-40 flex h-14 border-t border-line bg-card">
+        {(
+          [
+            { id: "docs", label: "Docs", icon: Files },
+            { id: "chat", label: "Chat", icon: MessageSquare },
+            { id: "notes", label: "Notes", icon: Highlighter },
+            { id: "tools", label: "Tools", icon: Wrench },
+          ] as { id: "docs" | "chat" | "notes" | "tools"; label: string; icon: typeof MessageSquare }[]
+        ).map((item) => {
+          const Icon = item.icon;
+          const active = mobilePanel === item.id;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => openMobilePanel(item.id)}
+              className={clsx(
+                "flex flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-semibold transition-colors",
+                active ? "text-terracotta" : "text-ink-soft hover:text-ink"
+              )}
+            >
+              <Icon className="h-5 w-5" />
+              {item.label}
+            </button>
+          );
+        })}
+      </nav>
+
+      {/* Mobile slide-over sheet for the selected panel */}
+      {mobilePanel && (
+        <div className="lg:hidden fixed inset-0 z-50">
+          <div
+            className="absolute inset-0 bg-ink/40"
+            onClick={() => setMobilePanel(null)}
+            aria-hidden="true"
+          />
+          <div
+            className={clsx(
+              "absolute bottom-14 top-0 flex w-[85vw] max-w-sm flex-col bg-card shadow-xl",
+              mobilePanel === "docs" ? "left-0 border-r border-line" : "right-0 border-l border-line"
+            )}
+          >
+            {mobilePanel === "docs" ? left : right}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

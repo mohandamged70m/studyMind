@@ -20,7 +20,7 @@ export default function ReviewView({
   const [mode, setMode] = useState<"flashcard" | "quiz">("flashcard");
 
   return (
-    <div className="animate-page-enter flex-1 w-full mx-auto overflow-y-auto" style={{ maxWidth: "1280px", padding: "32px 32px" }}>
+    <div className="animate-page-enter mx-auto w-full flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8" style={{ maxWidth: "1280px" }}>
       <div className="flex flex-col items-center gap-8 max-w-2xl mx-auto">
         {/* Header */}
         <div className="w-full flex flex-col items-center text-center gap-2">

@@ -95,8 +95,11 @@ export default function PdfViewer({
 
       const containerRect = containerRef.current?.getBoundingClientRect();
       if (containerRect) {
+        const half = 144; // ~half of the w-72 popover
+        const vx = e.clientX - containerRect.left;
+        const clampedVx = Math.max(half, Math.min(vx, containerRect.width - half));
         setPopoverPos({
-          x: e.clientX - containerRect.left + containerRef.current!.scrollLeft,
+          x: clampedVx + containerRef.current!.scrollLeft,
           y: e.clientY - containerRect.top + containerRef.current!.scrollTop - 40
         });
       }
@@ -178,7 +181,7 @@ export default function PdfViewer({
       {/* Pages Container — scrollable body */}
       <div
         ref={containerRef}
-        className="flex-1 overflow-y-auto px-10 py-8 space-y-8 relative scroll-smooth bg-paper-deep/20"
+        className="flex-1 overflow-y-auto px-3 py-4 space-y-6 relative scroll-smooth bg-paper-deep/20 sm:px-6 sm:py-6 lg:px-10 lg:py-8 lg:space-y-8"
       >
         {pages.map((pageText, idx) => {
           const pageNum = idx + 1;
@@ -191,7 +194,7 @@ export default function PdfViewer({
               ref={(el) => { pageRefs.current[pageNum] = el; }}
               onMouseUp={(e) => handleMouseUp(e, pageNum)}
               className={clsx(
-                "bg-card border border-line rounded-xl shadow-sm px-10 py-10 transition-all duration-300 relative select-text font-reading text-ink text-[var(--text-body)] md:text-[var(--text-body)] leading-relaxed max-w-3xl mx-auto",
+                "bg-card border border-line rounded-xl shadow-sm px-4 py-6 transition-all duration-300 relative select-text font-reading text-ink text-[var(--text-body)] leading-relaxed max-w-3xl mx-auto sm:px-8 sm:py-8 lg:px-10 lg:py-10",
                 isCurrent ? "shadow-md ring-1 ring-sage/30 border-sage/40" : "opacity-85"
               )}
             >
@@ -211,7 +214,7 @@ export default function PdfViewer({
               top: `${popoverPos.y}px`,
               transform: "translate(-50%, -100%)"
             }}
-            className="z-50 bg-card border border-line rounded-xl shadow-xl p-4 w-72 flex flex-col gap-3 animate-fade-in font-sans"
+            className="z-50 bg-card border border-line rounded-xl shadow-xl p-4 w-72 max-w-[90vw] flex flex-col gap-3 animate-fade-in font-sans"
             onMouseUp={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">
