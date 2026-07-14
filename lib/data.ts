@@ -1,6 +1,7 @@
 import { Document, ChatMessage, Highlight, Flashcard, QuizQuestion, Collection } from "./types";
 import {
   seedDemoLibraryIfNeeded,
+  seedDemoRoomIfNeeded,
   getDocuments as storeGetDocuments,
   getDocumentById as storeGetDocumentById,
   addLibraryDocument,
@@ -22,6 +23,13 @@ import {
   deleteCollection as storeDeleteCollection,
   updateDocumentCollection as storeUpdateDocumentCollection,
   renameLibraryDocument as storeRenameLibraryDocument,
+  getConversation as storeGetConversation,
+  getConversationByShareId as storeGetConversationByShareId,
+  updateConversationDocuments as storeUpdateConversationDocuments,
+  getRoomHighlights as storeGetRoomHighlights,
+  getRoomChatMessages as storeGetRoomChatMessages,
+  addRoomChatMessage as storeAddRoomChatMessage,
+  clearRoomChatHistory as storeClearRoomChatHistory,
 } from "./db/store";
 
 // Seed demo data on first import (once per server lifetime)
@@ -29,6 +37,7 @@ let seeded = false;
 async function ensureSeeded() {
   if (!seeded) {
     await seedDemoLibraryIfNeeded();
+    await seedDemoRoomIfNeeded();
     seeded = true;
   }
 }
@@ -290,4 +299,122 @@ export async function bulkDeleteDocuments(
     if (ok) count++;
   }
   return count;
+}
+
+// ─── Study Rooms (conversation-based, multi-document) ──────────────────
+
+export async function getRoom(
+  roomId: string,
+  userId?: string
+): Promise<import("./db/types").ConversationRecord | undefined> {
+  await ensureSeeded();
+  const room = await storeGetConversation(roomId);
+  if (!room) return undefined;
+  if (userId && room.userId && room.userId !== userId) return undefined;
+  return room;
+}
+
+export async function getRoomByShareId(
+  shareId: string
+): Promise<import("./db/types").ConversationRecord | undefined> {
+  await ensureSeeded();
+  return storeGetConversationByShareId(shareId) ?? undefined;
+}
+
+export async function createRoom(
+  title: string,
+  documentIds: string[] = [],
+  userId?: string
+): Promise<import("./db/types").ConversationRecord> {
+  await ensureSeeded();
+  // Delegate to the conversation store; we just need a fresh conversation.
+  const { createConversation } = await import("./db/store");
+  const room = await createConversation(title, documentIds);
+  return room;
+}
+
+export async function updateRoomDocuments(
+  roomId: string,
+  documentIds: string[],
+  userId?: string
+): Promise<import("./db/types").ConversationRecord | undefined> {
+  await ensureSeeded();
+  const room = await storeGetConversation(roomId);
+  if (!room) return undefined;
+  if (userId && room.userId && room.userId !== userId) return undefined;
+  return (await storeUpdateConversationDocuments(roomId, documentIds)) ?? undefined;
+}
+
+export async function addDocToRoom(
+  roomId: string,
+  docId: string,
+  userId?: string
+): Promise<string[] | undefined> {
+  const room = await getRoom(roomId, userId);
+  if (!room) return undefined;
+  if (room.documentIds.includes(docId)) return room.documentIds;
+  const next = [...room.documentIds, docId];
+  await updateRoomDocuments(roomId, next, userId);
+  return next;
+}
+
+export async function removeDocFromRoom(
+  roomId: string,
+  docId: string,
+  userId?: string
+): Promise<string[] | undefined> {
+  const room = await getRoom(roomId, userId);
+  if (!room) return undefined;
+  const next = room.documentIds.filter((id) => id !== docId);
+  await updateRoomDocuments(roomId, next, userId);
+  return next;
+}
+
+export async function getRoomDocuments(
+  roomId: string,
+  userId?: string
+): Promise<Document[]> {
+  await ensureSeeded();
+  const room = await storeGetConversation(roomId);
+  if (!room) return [];
+  const docs = await Promise.all(
+    room.documentIds.map((id) => storeGetDocumentById(id, userId))
+  );
+  return docs.filter((d): d is Document => Boolean(d));
+}
+
+export async function getRoomHighlights(
+  roomId: string,
+  userId?: string
+): Promise<Highlight[]> {
+  await ensureSeeded();
+  return storeGetRoomHighlights(roomId, userId);
+}
+
+export async function getRoomChatMessages(
+  roomId: string,
+  userId?: string
+): Promise<ChatMessage[]> {
+  await ensureSeeded();
+  return storeGetRoomChatMessages(roomId, userId);
+}
+
+export async function addRoomChatMessage(
+  roomId: string,
+  role: "user" | "assistant",
+  content: string,
+  citedPage?: number,
+  citedDocId?: string,
+  userId?: string
+): Promise<ChatMessage> {
+  await ensureSeeded();
+  return storeAddRoomChatMessage(roomId, role, content, citedPage, citedDocId, userId);
+}
+
+export async function clearRoomChatHistory(
+  roomId: string,
+  userId?: string
+): Promise<void> {
+  await ensureSeeded();
+  return storeClearRoomChatHistory(roomId, userId);
 }

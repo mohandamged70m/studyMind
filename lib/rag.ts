@@ -126,3 +126,57 @@ If there is a particular topic or phrase you'd like to dive into, you can highli
     citedPage: maxScore > 0 ? citedPage : 1
   };
 }
+
+export async function queryDocuments(
+  docIds: string[],
+  query: string
+): Promise<{ answer: string; citedPage?: number; citedDocId?: string }> {
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  const lowercaseQuery = query.toLowerCase();
+  const STOPWORDS = new Set([
+    "the", "a", "an", "is", "are", "was", "were", "be", "to", "of", "in",
+    "on", "and", "or", "that", "this", "these", "those", "what", "which",
+    "who", "how", "why", "for", "with", "as", "at", "by", "it", "its",
+  ]);
+  const terms = lowercaseQuery
+    .split(/\s+/)
+    .filter((t) => t.length >= 3 && !STOPWORDS.has(t));
+
+  let best = { score: 0, page: 1, docId: docIds[0] ?? "" };
+
+  for (const docId of docIds) {
+    const pages = await getDocumentPages(docId);
+    pages.forEach((pageText, idx) => {
+      let score = 0;
+      const pageLower = pageText.toLowerCase();
+      terms.forEach((term) => {
+        const regex = new RegExp(term.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"), "g");
+        const matches = pageLower.match(regex);
+        if (matches) score += matches.length;
+      });
+      if (score > best.score) {
+        best = { score, page: idx + 1, docId };
+      }
+    });
+  }
+
+  if (best.score === 0 || !best.docId) {
+    return {
+      answer: `I searched across ${docIds.length} document(s) in this study room but didn't find a strong match for "${query}". Try rephrasing, or highlight a passage in the reader to ask about it directly.`,
+      citedPage: 1,
+      citedDocId: docIds[0],
+    };
+  }
+
+  const doc = await getDocumentById(best.docId);
+  const docTitle = doc?.title ?? "the study materials";
+
+  return {
+    answer: `Based on your question about "${query}", here is what I found in ${docTitle}:
+
+The most relevant passage is on page ${best.page}. It covers concepts that directly address your question. You can open that document and jump to the cited page to read the full context. If you'd like, I can also generate flashcards or a quiz from this material to test your understanding.`,
+    citedPage: best.page,
+    citedDocId: best.docId,
+  };
+}

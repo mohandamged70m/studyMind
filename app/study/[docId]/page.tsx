@@ -1,7 +1,5 @@
 import { redirect } from "next/navigation";
-import { getDocumentById, getDocumentPages, getHighlights, getChatMessages } from "@/lib/data";
-import StudyView from "@/components/study/StudyView";
-import { selectDocumentAction } from "@/app/actions";
+import { getRoomDocuments, getDocumentById } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
 
@@ -9,29 +7,20 @@ interface PageProps {
   params: Promise<{ docId: string }>;
 }
 
-export default async function StudyPage({ params }: PageProps) {
+export default async function StudyDocRedirect({ params }: PageProps) {
   const { docId } = await params;
-
   const doc = await getDocumentById(docId);
   if (!doc) {
     redirect("/library");
   }
 
-  // Persist current selection in cookies for shell TopNav tabs fallback
-  await selectDocumentAction(docId);
+  // Prefer a room that already contains this document; otherwise fall back to
+  // the demo room so existing /study/[docId] links keep working.
+  const { getRoom } = await import("@/lib/data");
+  const room = await getRoom("demo-room");
+  if (room && room.documentIds.includes(docId)) {
+    redirect(`/study/room/${room.id}`);
+  }
 
-  // Fetch initial content data
-  const pages = await getDocumentPages(docId);
-  const highlights = await getHighlights(docId);
-  const chatMessages = await getChatMessages(docId);
-
-  return (
-    <StudyView
-      docId={docId}
-      title={doc.title}
-      pages={pages}
-      highlights={highlights}
-      chatMessages={chatMessages}
-    />
-  );
+  redirect("/study/room/demo-room");
 }

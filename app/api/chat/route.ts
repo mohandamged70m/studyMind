@@ -1,19 +1,39 @@
 import { NextRequest } from "next/server";
-import { queryDocument } from "@/lib/rag";
+import { queryDocument, queryDocuments } from "@/lib/rag";
 
 export async function POST(req: NextRequest) {
   try {
-    const { docId, query } = await req.json();
+    const { docId, docIds, query } = await req.json();
 
-    if (!docId || !query) {
-      return new Response(JSON.stringify({ error: "Missing docId or query" }), {
+    if (!query) {
+      return new Response(JSON.stringify({ error: "Missing query" }), {
         status: 400,
         headers: { "Content-Type": "application/json" }
       });
     }
 
-    // Run similarity retrieval and prompt generation
-    const { answer, citedPage } = await queryDocument(docId, query);
+    // Run similarity retrieval and prompt generation.
+    // Room mode (multiple documents) uses docIds; single-doc mode uses docId.
+    let answer: string;
+    let citedPage: number | undefined;
+    let citedDocId: string | undefined;
+
+    if (Array.isArray(docIds) && docIds.length > 0) {
+      const res = await queryDocuments(docIds, query);
+      answer = res.answer;
+      citedPage = res.citedPage;
+      citedDocId = res.citedDocId;
+    } else if (docId) {
+      const res = await queryDocument(docId, query);
+      answer = res.answer;
+      citedPage = res.citedPage;
+      citedDocId = docId;
+    } else {
+      return new Response(
+        JSON.stringify({ error: "Missing docId or docIds" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
 
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
@@ -32,7 +52,8 @@ export async function POST(req: NextRequest) {
     return new Response(stream, {
       headers: {
         "Content-Type": "text/plain; charset=utf-8",
-        "X-Cited-Page": citedPage ? citedPage.toString() : ""
+        "X-Cited-Page": citedPage ? citedPage.toString() : "",
+        "X-Cited-Doc": citedDocId ? citedDocId : ""
       }
     });
   } catch (err: any) {

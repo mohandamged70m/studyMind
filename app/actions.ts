@@ -14,7 +14,13 @@ import {
   renameCollection,
   deleteCollection,
   assignToCollection,
-  bulkDeleteDocuments
+  bulkDeleteDocuments,
+  getDocumentPages,
+  createRoom,
+  addDocToRoom,
+  removeDocFromRoom,
+  addRoomChatMessage,
+  clearRoomChatHistory
 } from "@/lib/data";
 import { embedDocument } from "@/lib/rag";
 
@@ -145,5 +151,45 @@ export async function bulkDeleteDocumentsAction(ids: string[]) {
   const count = await bulkDeleteDocuments(ids);
   revalidatePath("/library");
   return count;
+}
+
+// ─── Study Rooms ───────────────────────────────────────────────────────
+
+export async function createRoomAction(title?: string, docIds?: string[]) {
+  const room = await createRoom(title?.trim() || "My Study Room", docIds ?? []);
+  revalidatePath("/library");
+  return room;
+}
+
+export async function addDocToRoomAction(roomId: string, docId: string) {
+  const next = await addDocToRoom(roomId, docId);
+  revalidatePath(`/study/room/${roomId}`);
+  return next;
+}
+
+export async function removeDocFromRoomAction(roomId: string, docId: string) {
+  const next = await removeDocFromRoom(roomId, docId);
+  revalidatePath(`/study/room/${roomId}`);
+  return next;
+}
+
+export async function addRoomChatMessageAction(
+  roomId: string,
+  role: "user" | "assistant",
+  content: string,
+  citedPage?: number,
+  citedDocId?: string
+) {
+  const msg = await addRoomChatMessage(roomId, role, content, citedPage, citedDocId);
+  return msg;
+}
+
+export async function clearRoomChatHistoryAction(roomId: string) {
+  await clearRoomChatHistory(roomId);
+  revalidatePath(`/study/room/${roomId}`);
+}
+
+export async function getDocumentPagesAction(docId: string) {
+  return getDocumentPages(docId);
 }
 

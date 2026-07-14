@@ -9,10 +9,17 @@ import { SignInButton, SignUpButton, Show, UserButton } from "@clerk/nextjs";
 export default function TopNav({ activeDocId }: { activeDocId?: string }) {
   const pathname = usePathname();
 
-  // Extract docId from current pathname if in /study/ or /review/
-  const studyMatch = pathname.match(/^\/study\/([^/]+)/);
+  // Extract docId/roomId from current pathname if in /study/ or /review/
+  const roomMatch = pathname.match(/^\/study\/room\/([^/]+)/);
+  const studyMatch = pathname.match(/^\/study\/(?!room\/)([^/]+)/);
   const reviewMatch = pathname.match(/^\/review\/([^/]+)/);
-  const currentDocId = studyMatch?.[1] || reviewMatch?.[1] || activeDocId;
+  const currentDocId =
+    roomMatch?.[1] || studyMatch?.[1] || reviewMatch?.[1] || activeDocId;
+  const studyRoomHref = roomMatch
+    ? `/study/room/${roomMatch[1]}`
+    : currentDocId
+      ? `/study/${currentDocId}`
+      : "/study/room/demo-room";
 
   const tabs = [
     {
@@ -23,10 +30,9 @@ export default function TopNav({ activeDocId }: { activeDocId?: string }) {
     },
     {
       name: "Study Room",
-      href: currentDocId ? `/study/${currentDocId}` : "#",
+      href: studyRoomHref,
       icon: BookOpen,
-      active: pathname.startsWith("/study"),
-      disabled: !currentDocId
+      active: pathname.startsWith("/study")
     },
     {
       name: "Review",

@@ -11,12 +11,14 @@ export default function PdfViewer({
   docId,
   title,
   pages,
-  highlights
+  highlights,
+  onSaved
 }: {
   docId: string;
   title: string;
   pages: string[];
   highlights: Highlight[];
+  onSaved?: (h: Highlight) => void;
 }) {
   const { activePage, setActivePage } = useActivePage();
   const [isPending, startTransition] = useTransition();
@@ -113,7 +115,13 @@ export default function PdfViewer({
   const handleSaveHighlight = () => {
     if (!selectedText) return;
     startTransition(async () => {
-      await saveHighlightAction(docId, selectedPageNum, selectedText, noteText.trim() || undefined);
+      const saved = await saveHighlightAction(
+        docId,
+        selectedPageNum,
+        selectedText,
+        noteText.trim() || undefined
+      );
+      onSaved?.(saved);
       clearSelection();
     });
   };

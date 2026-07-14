@@ -149,6 +149,107 @@ export async function createConversation(
   return conversation;
 }
 
+export async function updateConversationDocuments(
+  id: string,
+  documentIds: string[]
+): Promise<ConversationRecord | null> {
+  const store = await loadStore();
+  const conv = store.conversations.find((c) => c.id === id);
+  if (!conv) return null;
+  conv.documentIds = documentIds;
+  conv.updatedAt = new Date().toISOString();
+  await saveStore();
+  return conv;
+}
+
+export async function getConversationByShareId(
+  shareId: string
+): Promise<ConversationRecord | null> {
+  const store = await loadStore();
+  return (
+    store.conversations.find((c) => c.shareId === shareId) ?? null
+  );
+}
+
+// ─── Room-scoped highlights & chat (Study Room over a conversation) ────
+
+export async function getRoomHighlights(
+  roomId: string,
+  userId?: string
+): Promise<import("../types").Highlight[]> {
+  const store = await loadStore();
+  const conv = store.conversations.find((c) => c.id === roomId);
+  if (!conv) return [];
+  const docIds = new Set(conv.documentIds);
+  const highlights = store.highlights.filter((h: any) => docIds.has(h.docId));
+  if (userId) {
+    return highlights.filter((h: any) => !h.userId || h.userId === userId);
+  }
+  return highlights;
+}
+
+export async function getRoomChatMessages(
+  roomId: string,
+  userId?: string
+): Promise<import("../types").ChatMessage[]> {
+  const store = await loadStore();
+  const raw = store.pages["__roomchat__"]?.[roomId]
+    ? JSON.parse(store.pages["__roomchat__"][roomId] as any)
+    : [];
+  if (userId) return raw.filter((m: any) => !m.userId || m.userId === userId);
+  return raw;
+}
+
+export async function addRoomChatMessage(
+  roomId: string,
+  role: "user" | "assistant",
+  content: string,
+  citedPage: number | undefined,
+  citedDocId: string | undefined,
+  userId?: string
+): Promise<import("../types").ChatMessage> {
+  const store = await loadStore();
+  if (!store.pages["__roomchat__"]) store.pages["__roomchat__"] = {};
+  if (!store.pages["__roomchat__"][roomId])
+    store.pages["__roomchat__"][roomId] = "[]";
+
+  const messages: any[] = JSON.parse(store.pages["__roomchat__"][roomId] as any);
+  const newMessage: import("../types").ChatMessage & {
+    citedDocId?: string;
+    userId?: string;
+  } = {
+    id: `rmsg-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+    role,
+    content,
+    citedPage,
+    citedDocId,
+    userId,
+  };
+  messages.push(newMessage);
+  store.pages["__roomchat__"][roomId] = JSON.stringify(messages);
+  await saveStore();
+  return newMessage;
+}
+
+export async function clearRoomChatHistory(
+  roomId: string,
+  userId?: string
+): Promise<void> {
+  const store = await loadStore();
+  if (!store.pages["__roomchat__"]) store.pages["__roomchat__"] = {};
+  if (userId) {
+    const msgs: any[] = store.pages["__roomchat__"][roomId]
+      ? JSON.parse(store.pages["__roomchat__"][roomId] as any)
+      : [];
+    store.pages["__roomchat__"][roomId] = JSON.stringify(
+      msgs.filter((m: any) => m.userId && m.userId !== userId)
+    );
+  } else {
+    store.pages["__roomchat__"][roomId] = "[]";
+  }
+  await saveStore();
+}
+
 export async function addMessage(
   message: Omit<MessageRecord, "id" | "createdAt">
 ): Promise<MessageRecord> {
@@ -780,4 +881,30 @@ export async function seedDemoConversationIfNeeded(): Promise<string> {
 
   await saveStore();
   return "demo";
+}
+
+export async function seedDemoRoomIfNeeded(): Promise<string> {
+  const store = await loadStore();
+  const existing = store.conversations.find((c) => c.id === "demo-room");
+  if (existing) return existing.id;
+
+  // A Study Room needs library documents; ensure the demo library exists first.
+  if (store.libraryDocs.length === 0) {
+    await seedDemoLibraryIfNeeded();
+  }
+
+  const now = new Date().toISOString();
+  const room: ConversationRecord = {
+    id: "demo-room",
+    title: "My Study Room",
+    notebookTitle: "Study Room Notebook",
+    documentIds: ["clean-code", "quantum-computing", "deep-learning"],
+    location: "Study Room",
+    shareId: "share-demo",
+    createdAt: now,
+    updatedAt: now,
+  };
+  store.conversations.push(room);
+  await saveStore();
+  return "demo-room";
 }

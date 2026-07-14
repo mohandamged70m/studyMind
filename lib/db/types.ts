@@ -56,6 +56,8 @@ export interface ConversationRecord {
   notebookTitle: string;
   documentIds: string[];
   location: string;
+  /** Short id used for shareable room links (no auth required to view) */
+  shareId?: string;
   createdAt: string;
   updatedAt: string;
   userId?: string;
