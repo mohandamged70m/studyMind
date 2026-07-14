@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, LayoutGrid, List, CheckSquare } from "lucide-react";
+import { Search, LayoutGrid, List, CheckSquare, FolderOpen } from "lucide-react";
 
 export type SortKey = "recent" | "title" | "progress";
 
@@ -14,6 +14,7 @@ interface LibraryToolbarProps {
   selectMode: boolean;
   onToggleSelectMode: () => void;
   resultCount: number;
+  onOpenCollections: () => void;
 }
 
 const SORT_LABELS: Record<SortKey, string> = {
@@ -32,9 +33,19 @@ export default function LibraryToolbar({
   selectMode,
   onToggleSelectMode,
   resultCount,
+  onOpenCollections,
 }: LibraryToolbarProps) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
+      <button
+        onClick={onOpenCollections}
+        className="lg:hidden flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-line bg-card text-sm font-medium text-ink-soft hover:text-ink hover:border-sage/40 transition-colors focus:outline-none focus:ring-2 focus:ring-terracotta/40 focus:border-terracotta shrink-0"
+        aria-label="Open collections"
+      >
+        <FolderOpen className="h-4 w-4 text-sage" />
+        <span>Collections</span>
+      </button>
+
       <div className="relative flex-1 min-w-0">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-soft/70" />
         <input

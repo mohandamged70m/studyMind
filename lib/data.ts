@@ -22,6 +22,7 @@ import {
   renameCollection as storeRenameCollection,
   deleteCollection as storeDeleteCollection,
   updateDocumentCollection as storeUpdateDocumentCollection,
+  bulkUpdateDocumentCollection as storeBulkUpdateDocumentCollection,
   renameLibraryDocument as storeRenameLibraryDocument,
   getConversation as storeGetConversation,
   getConversationByShareId as storeGetConversationByShareId,
@@ -286,6 +287,14 @@ export async function assignToCollection(
 ): Promise<Document | undefined> {
   await ensureSeeded();
   return storeUpdateDocumentCollection(docId, collectionId);
+}
+
+export async function bulkAssignToCollection(
+  ids: string[],
+  collectionId: string | null
+): Promise<number> {
+  await ensureSeeded();
+  return storeBulkUpdateDocumentCollection(ids, collectionId);
 }
 
 export async function bulkDeleteDocuments(

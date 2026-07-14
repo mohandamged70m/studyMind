@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useTransition } from "react";
 import UploadDropzone from "@/components/library/UploadDropzone";
 import DocumentCard from "@/components/library/DocumentCard";
 import LibrarySidebar from "@/components/library/LibrarySidebar";
+import LibraryCollectionsSheet from "@/components/library/LibraryCollectionsSheet";
 import LibraryToolbar, { SortKey } from "@/components/library/LibraryToolbar";
 import BulkActionBar from "@/components/library/BulkActionBar";
 import { Document, Collection } from "@/lib/types";
@@ -14,7 +15,7 @@ import {
   deleteCollectionAction,
   renameDocumentAction,
   bulkDeleteDocumentsAction,
-  assignToCollectionAction,
+  bulkAssignToCollectionAction,
 } from "@/app/actions";
 import { FolderOpen, SearchX } from "lucide-react";
 
@@ -39,6 +40,8 @@ export default function LibraryView({
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [selectMode, setSelectMode] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [collectionsSheetOpen, setCollectionsSheetOpen] = useState(false);
+  const [bulkError, setBulkError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   useEffect(() => {
@@ -167,12 +170,19 @@ export default function LibraryView({
 
   const handleBulkAssign = (collectionId: string | null) => {
     const ids = Array.from(selected);
+    if (!ids.length) return;
+    setBulkError(null);
     startTransition(async () => {
-      for (const id of ids) await assignToCollectionAction(id, collectionId);
-      setDocuments((prev) =>
-        prev.map((d) => (ids.includes(d.id) ? { ...d, collectionId } : d))
-      );
-      setSelected(new Set());
+      try {
+        await bulkAssignToCollectionAction(ids, collectionId);
+        setDocuments((prev) =>
+          prev.map((d) => (ids.includes(d.id) ? { ...d, collectionId } : d))
+        );
+        setSelected(new Set());
+      } catch (err) {
+        console.error("Bulk assign failed", err);
+        setBulkError("Couldn't move the selected documents. Please try again.");
+      }
     });
   };
 
@@ -181,6 +191,20 @@ export default function LibraryView({
   return (
     <div className="flex-1 flex min-h-0">
       <LibrarySidebar
+        collections={collections}
+        activeCollection={activeCollection}
+        onSelect={setActiveCollection}
+        collectionCounts={collectionCounts}
+        totalCount={documents.length}
+        uncategorizedCount={uncategorizedCount}
+        onCreate={handleCreateCollection}
+        onRename={handleRenameCollection}
+        onDelete={handleDeleteCollection}
+      />
+
+      <LibraryCollectionsSheet
+        open={collectionsSheetOpen}
+        onClose={() => setCollectionsSheetOpen(false)}
         collections={collections}
         activeCollection={activeCollection}
         onSelect={setActiveCollection}
@@ -234,6 +258,7 @@ export default function LibraryView({
             setSelected(new Set());
           }}
           resultCount={visibleDocs.length}
+          onOpenCollections={() => setCollectionsSheetOpen(true)}
         />
 
         {/* Document area */}
@@ -274,10 +299,15 @@ export default function LibraryView({
       <BulkActionBar
         selectedCount={selected.size}
         collections={collections}
-        onClear={() => setSelected(new Set())}
+        onClear={() => {
+          setSelected(new Set());
+          setBulkError(null);
+        }}
         onDelete={handleBulkDelete}
         onAssign={handleBulkAssign}
         pending={pending}
+        error={bulkError}
+        onDismissError={() => setBulkError(null)}
       />
     </div>
   );

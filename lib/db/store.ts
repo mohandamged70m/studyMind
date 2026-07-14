@@ -450,6 +450,29 @@ export async function updateDocumentCollection(
   return doc;
 }
 
+/**
+ * Batched collection assignment. Mutates all matching docs in the loaded store
+ * and persists with a single `saveStore()` call so the update is atomic for
+ * this JSON store (no partial writes on failure). Returns the number updated.
+ */
+export async function bulkUpdateDocumentCollection(
+  ids: string[],
+  collectionId: string | null
+): Promise<number> {
+  if (!ids.length) return 0;
+  const store = await loadStore();
+  const idSet = new Set(ids);
+  let count = 0;
+  store.libraryDocs.forEach((d: any) => {
+    if (idSet.has(d.id)) {
+      d.collectionId = collectionId;
+      count++;
+    }
+  });
+  if (count > 0) await saveStore();
+  return count;
+}
+
 export async function renameLibraryDocument(
   id: string,
   title: string

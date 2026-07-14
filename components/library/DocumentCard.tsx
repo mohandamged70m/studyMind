@@ -18,6 +18,7 @@ import { useState, useTransition } from "react";
 import type { Document } from "@/lib/types";
 import { selectDocumentAction, deleteDocumentAction } from "@/app/actions";
 import clsx from "clsx";
+import ConfirmDialog from "./ConfirmDialog";
 
 const STATUS_CONFIG = {
   new: { label: "New", classes: "bg-sage/10 text-sage border border-sage/20" },
@@ -59,6 +60,7 @@ export default function DocumentCard({
   const [isDeleting, startDeleteTransition] = useTransition();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(doc.title);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const status = isOptimistic ? null : STATUS_CONFIG[doc.status];
   const typeKey = doc.type ?? "pdf";
@@ -92,12 +94,29 @@ export default function DocumentCard({
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    if (!confirm(`Delete "${doc.title}"? This also removes its flashcards, highlights, and chats.`)) return;
+    setConfirmDelete(true);
+  };
+
+  const performDelete = () => {
     startDeleteTransition(async () => {
       await deleteDocumentAction(doc.id);
+      setConfirmDelete(false);
       onDeleted?.(doc.id);
     });
   };
+
+  const deleteConfirmDialog = (
+    <ConfirmDialog
+      open={confirmDelete}
+      title={`Delete "${doc.title}"?`}
+      message="This also removes its flashcards, highlights, and chats."
+      confirmLabel="Delete"
+      destructive
+      pending={isDeleting}
+      onConfirm={performDelete}
+      onClose={() => setConfirmDelete(false)}
+    />
+  );
 
   const stats = (
     <div className="flex items-center gap-3 text-[var(--text-micro)] text-ink-soft">
@@ -198,6 +217,7 @@ export default function DocumentCard({
           onDelete={handleDelete}
           isDeleting={isDeleting}
         />
+        {deleteConfirmDialog}
       </div>
     );
   }
@@ -309,6 +329,8 @@ export default function DocumentCard({
           <SelectBox checked disabled />
         </div>
       )}
+
+      {deleteConfirmDialog}
     </div>
   );
 }
@@ -345,7 +367,8 @@ function QuickLink({ href, label, icon, onClick }: { href: string; label: string
         if (!href.startsWith("#")) router.push(href);
       }}
       title={label}
-      className="flex items-center gap-1 px-2 py-1 rounded-lg bg-paper-deep border border-line text-[var(--text-micro)] font-semibold text-ink-soft hover:text-terracotta hover:border-terracotta/40 transition-colors"
+      aria-label={label}
+      className="flex items-center gap-1 px-2 py-1 rounded-lg bg-paper-deep border border-line text-[var(--text-micro)] font-semibold text-ink-soft hover:text-terracotta-text hover:border-terracotta/40 transition-colors"
     >
       {icon}
       <span className="hidden sm:inline">{label}</span>

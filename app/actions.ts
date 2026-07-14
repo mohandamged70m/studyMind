@@ -14,6 +14,7 @@ import {
   renameCollection,
   deleteCollection,
   assignToCollection,
+  bulkAssignToCollection,
   bulkDeleteDocuments,
   getDocumentPages,
   createRoom,
@@ -144,6 +145,16 @@ export async function assignToCollectionAction(
 ) {
   await assignToCollection(docId, collectionId);
   revalidatePath("/library");
+}
+
+export async function bulkAssignToCollectionAction(
+  ids: string[],
+  collectionId: string | null
+) {
+  if (!ids.length) return 0;
+  const count = await bulkAssignToCollection(ids, collectionId);
+  revalidatePath("/library");
+  return count;
 }
 
 export async function bulkDeleteDocumentsAction(ids: string[]) {

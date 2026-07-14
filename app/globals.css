@@ -11,6 +11,7 @@
   --sage-deep: #5f7154;
   --terracotta: #c1633c;
   --terracotta-soft: #f0dccb;
+  --terracotta-text: #a8552f; /* darker terracotta for small text — meets WCAG AA (≥4.5:1) on --card and --paper */
   --gold: #b8923f;
   --ring-focus: rgba(193, 99, 60, 0.4);
 }
@@ -26,6 +27,7 @@
   --color-sage-deep: var(--sage-deep);
   --color-terracotta: var(--terracotta);
   --color-terracotta-soft: var(--terracotta-soft);
+  --color-terracotta-text: var(--terracotta-text);
   --color-gold: var(--gold);
 
   --font-serif: var(--font-fraunces), serif;
